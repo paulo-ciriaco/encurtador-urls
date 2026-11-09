@@ -70,4 +70,47 @@ public class UrlsServiceTests
             () => _service.CreateShortUrlAsync(urlLonga)
         );
     }
+
+    [Fact]
+    public async Task GetUrlByIdAsync_ComIdVazio_DeveLancarArgumentException()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.GetUrlByIdAsync(Guid.Empty)
+        );
+    }
+
+    [Fact]
+    public async Task GetUrlByIdAsync_ComIdInexistente_DeveRetornarNull()
+    {
+        var id = Guid.NewGuid();
+
+        _mockContext.Setup(c => c.GetByIdAsync(id))
+            .ReturnsAsync((UrlItem?)null);
+
+        var resultado = await _service.GetUrlByIdAsync(id);
+
+        Assert.Null(resultado);
+    }
+
+    [Fact]
+    public async Task GetUrlByIdAsync_ComIdExistente_DeveRetornarUrlItem()
+    {
+        var id = Guid.NewGuid();
+
+        var urlEsperada = new UrlItem
+        {
+            Id = id,
+            OriginalUrl = "https://www.google.com",
+            ShortCode = "abc123",
+            CreatedAt = DateTimeOffset.Now,
+            ClickCount = 0
+        };
+
+        _mockContext.Setup(c => c.GetByIdAsync(id))
+            .ReturnsAsync(urlEsperada);
+
+        var resultado = await _service.GetUrlByIdAsync(id);
+
+        Assert.Same(urlEsperada, resultado);
+    }
 }
